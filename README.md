@@ -8,11 +8,11 @@ MeshNote 是桌面优先的 AI 学习与文档理解工具。每个 Mesh 是一�
 
 ## 快速开始
 
-需要 **Node.js 22.12+**（推荐当前 Node 24 LTS）和现代桌面浏览器。
+需要 **Bun 1.4+**、**Node.js 22.12+**（推荐当前 Node 24 LTS，Vite 与 Playwright 仍需 Node）和现代桌面浏览器。
 
 ```bash
-npm install
-npm run dev
+bun install
+bun run dev
 ```
 
 打开 **http://127.0.0.1:5173**。此命令同时启动 Vite 和本地 Node 模型代理（8787）。无需 API key：默认使用明确标注的 **Mock 演示模式**，首次打开即包含 Transformer 的 8 个示例节点。
@@ -50,7 +50,7 @@ MESHNOTE_LLM_API_KEY=你的密钥
 MESHNOTE_LLM_MODEL=gpt-4o-mini
 ```
 
-重启 `npm run dev`。`baseUrl` 是供应商前缀（通常含 `/v1`），不要包含 `/chat/completions`。可以指向支持文本 Chat Completions 和 SSE 的兼容服务。
+重启 `bun run dev`。`baseUrl` 是供应商前缀（通常含 `/v1`），不要包含 `/chat/completions`。可以指向支持文本 Chat Completions 和 SSE 的兼容服务。
 
 **不要把密钥命名为 `VITE_*`。** 密钥只留在 Node 环境，不进入浏览器 bundle 或 IndexedDB。没有 key 使用 Mock；真实模型发生错误时不会悄悄切换成演示回答。详见 [LLM 配置与协议](docs/LLM.md)。
 
@@ -59,8 +59,8 @@ MESHNOTE_LLM_MODEL=gpt-4o-mini
 ## 构建与本机运行
 
 ```bash
-npm run build
-npm start
+bun run build
+bun run start
 ```
 
 打开 **http://127.0.0.1:8787**。Node 服务同时托管 `dist` 和 `/api`，无需单独 Vite。
@@ -80,12 +80,12 @@ npm start
 ## 测试
 
 ```bash
-npm test                 # 领域、存储、流协议、代理、布局测试
-npm run build            # TypeScript + production bundle
-npx playwright install chromium
-npm run test:e2e         # Chromium 真实用户流程，自动启动/停止开发服务
+bun run test             # 领域、存储、流协议、代理、布局测试
+bun run build            # TypeScript + production bundle
+bunx playwright install chromium
+bun run test:e2e         # Chromium 真实用户流程，自动启动/停止开发服务
 # 构建后验证生产静态服务：
-npm run test:e2e -- --config=playwright.production.config.ts
+bun run test:e2e -- --config=playwright.production.config.ts
 ```
 
 Linux 缺少浏览器系统依赖时，可按 Playwright 提示安装依赖。端到端测试需要默认端口空闲，并强制使用无 key 模式；真实模型路径用受控协议响应验证，不消耗供应商额度。

@@ -79,7 +79,7 @@ const MIME: Record<string, string> = {
 async function serveStatic(request: IncomingMessage, response: ServerResponse, directory: string, pathname: string) {
   let root: string;
   try { root = await realpath(directory); } catch {
-    throw new RequestError(503, '前端尚未构建，请先运行 npm run build，开发时请打开 http://127.0.0.1:5173');
+    throw new RequestError(503, '前端尚未构建，请先运行 bun run build，开发时请打开 http://127.0.0.1:5173');
   }
   let decoded: string;
   try { decoded = decodeURIComponent(pathname); } catch { throw new RequestError(400, '路径无效'); }

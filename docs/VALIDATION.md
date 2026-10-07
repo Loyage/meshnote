@@ -2,16 +2,16 @@
 
 ## 实际运行
 
-环境：Node v24.20.0、npm 11.19.0、Linux、Playwright Chromium。
+环境：Bun 1.4.2、Node v24.20.0、Linux、Playwright Chromium。包管理与命令入口已由 npm 切换为 Bun（`bun install` / `bun run`），Vite、Vitest、Playwright 与本地服务运行时仍由 Node 承载。
 
 | 命令 | 结果 |
 |---|---|
-| `npm install` | 完成，lockfile 已提交 |
-| `npm audit` | 0 vulnerabilities |
-| `npm run build` | TypeScript 与 Vite 构建通过 |
-| `npm test` | 11 文件、93 测试通过 |
-| `npm run test:e2e` | 5 Chromium 测试通过（开发服务） |
-| `npm run test:e2e -- --config=playwright.production.config.ts` | 同 5 测试通过（Node 托管 production dist） |
+| `bun install` | 完成，`bun.lock` 已提交（由 `package-lock.json` 迁移） |
+| `bun audit` | 0 vulnerabilities（281 packages） |
+| `bun run build` | TypeScript 与 Vite 构建通过 |
+| `bun run test` | 11 文件、93 测试通过 |
+| `bun run test:e2e` | 5 Chromium 测试通过（开发服务） |
+| `bun run test:e2e -- --config=playwright.production.config.ts` | 同 5 测试通过（Node 托管 production dist） |
 
 浏览器测试自动启动、关闭实际服务，不是只检查 React 组件输出。`docs/images/demo-workspace.png` 来自生产服务的真实 Chromium 截图。
 
@@ -43,7 +43,8 @@
 
 本机临时完整日志（不作为运行依赖）：
 
-- `/tmp/meshnote-build-restored.log`
+- Bun 迁移后复验：`/tmp/meshnote-bun-build.log`、`/tmp/meshnote-bun-test.log`、`/tmp/meshnote-bun-audit.log`、`/tmp/meshnote-bun-e2e.log`、`/tmp/meshnote-bun-e2e-prod.log`
+- 前次 npm 运行：`/tmp/meshnote-build-restored.log`
 - `/tmp/meshnote-unit-restored.log`
 - `/tmp/meshnote-e2e-restored.log`
 - `/tmp/meshnote-production-restored.log`

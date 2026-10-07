@@ -2,7 +2,7 @@
 
 ## 启动与配置
 
-`npm run dev` 同时启动 Vite（127.0.0.1:5173）和 Node 代理（127.0.0.1:8787）。没有 API key 时 `/api/config` 返回 Mock 模式，浏览器使用明确标注为预设内容的 `MockLLMProvider`，不访问外部模型。
+`bun run dev` 同时启动 Vite（127.0.0.1:5173）和 Node 代理（127.0.0.1:8787）。没有 API key 时 `/api/config` 返回 Mock 模式，浏览器使用明确标注为预设内容的 `MockLLMProvider`，不访问外部模型。
 
 复制 `.env.example` 为 `.env` 后设置：
 
@@ -14,7 +14,7 @@ MESHNOTE_LLM_MODEL=gpt-4o-mini
 
 base URL 是包含 `/v1` 等供应商前缀的地址，不包含 `/chat/completions`。代理在其后追加该路径。修改环境配置后重启开发服务。不要使用 `VITE_` 前缀，Vite 前缀变量会进入浏览器包。密钥不返回 `/api/config`，不保存在 IndexedDB，不记录在日志中。
 
-生产本机运行：`npm run build && npm start`，打开 http://127.0.0.1:8787。Node 安全托管 `dist` 和 SPA 路由；缺少构建时返回明确提示。`MESHNOTE_PORT` 默认 8787；开发 Vite 的固定代理端口也是 8787，改端口需同步调整 Vite 配置。
+生产本机运行：`bun run build && bun run start`，打开 http://127.0.0.1:8787。Node 安全托管 `dist` 和 SPA 路由；缺少构建时返回明确提示。`MESHNOTE_PORT` 默认 8787；开发 Vite 的固定代理端口也是 8787，改端口需同步调整 Vite 配置。
 
 ## 契约与流
 

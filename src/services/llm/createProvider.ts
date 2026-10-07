@@ -15,6 +15,6 @@ export async function createProvider(): Promise<{ provider: LLMProvider; label: 
     throw new Error('配置格式无效');
   } catch {
     // Do not silently change a configured real-provider session to fabricated Mock content.
-    throw new Error('无法连接本地模型服务。请使用 npm run dev 启动，或检查 npm start 服务。');
+    throw new Error('无法连接本地模型服务。请使用 bun run dev 启动，或检查 bun run start 服务。');
   }
 }
