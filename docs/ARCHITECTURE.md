@@ -5,7 +5,7 @@
 Mesh 是主题容器；KnowledgeNode 是完整的一次问题 + 回答，不是 message。ExplorationEdge 是一等实体，表达 source → target 的探索来源。不存在作为唯一关系来源的 parentNodeId。
 
 ```text
-React 三栏 UI / Zustand 视图状态
+React 可折叠侧栏 + 双栏可调 UI / Zustand 视图状态
                 ↓ subscribe / commands
          ApplicationService
           ↙       ↓         ↘
@@ -42,7 +42,7 @@ Repository 接口与 IndexedDB 实现分离；提供 Mesh、Node、Edge、Docume
 
 ## GraphLayout / 导航
 
-React Flow 管渲染交互；独立 GraphLayout 管坐标。ELK RIGHT 初始/主动全图布局；branch 新增在 source 右侧找空位，保留已有坐标。点击节点及搜索结果均选中并居中；支持 fit、回到选中节点、缩放、平移、MiniMap。选中路径及 breadcrumb 展示探索来源。非树边未来交由布局器绘制，不影响核心实体设计。
+React Flow 管渲染交互；独立 GraphLayout 管坐标。ELK DOWN 初始/主动全图布局（主体纵向、分支横向）；branch 新增在 source 下方找空位，保留已有坐标。工作空间侧栏默认收起，画布与详情面板各占剩余横向空间一半、中间分隔条可调。点击节点及搜索结果均选中并居中；支持 fit、回到选中节点、缩放、平移、MiniMap。选中路径及 breadcrumb 展示探索来源。非树边未来交由布局器绘制，不影响核心实体设计。
 
 ## Runtime / 安全
 

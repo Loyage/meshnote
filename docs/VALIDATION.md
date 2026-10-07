@@ -10,8 +10,8 @@
 | `bun audit` | 0 vulnerabilities（281 packages） |
 | `bun run build` | TypeScript 与 Vite 构建通过 |
 | `bun run test` | 11 文件、93 测试通过 |
-| `bun run test:e2e` | 5 Chromium 测试通过（开发服务） |
-| `bun run test:e2e -- --config=playwright.production.config.ts` | 同 5 测试通过（Node 托管 production dist） |
+| `bun run test:e2e` | 6 Chromium 测试通过（开发服务） |
+| `bun run test:e2e -- --config=playwright.production.config.ts` | 同 6 测试通过（Node 托管 production dist） |
 
 浏览器测试自动启动、关闭实际服务，不是只检查 React 组件输出。`docs/images/demo-workspace.png` 来自生产服务的真实 Chromium 截图。
 
@@ -20,7 +20,7 @@
 - Demo 八节点七连接、首次初始化、Mesh CRUD 与级联清理。
 - 历史节点创建两个兄弟分支，先出现节点再流式更新；刷新问答与边保留。
 - 祖先路径只发送 root→selected，排除兄弟；循环、多父、跨 Mesh、缺失引用的错误处理。
-- 初始布局、左→右方向、碰撞检测、增量布局旧坐标不变、通用图与显式重排。
+- 初始布局、上→下方向、碰撞检测、增量布局旧坐标不变、通用图与显式重排。
 - 点击/搜索/键盘激活选中、跨 Mesh 定位、相机居中、拖动或方向键移动后坐标刷新保留。
 - 取消保留部分回答、标题失败保留 fallback、截断流不假装成功。
 - IndexedDB 原子写入、存储错误、中断恢复、删除后 Demo 不复活。

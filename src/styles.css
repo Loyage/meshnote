@@ -115,6 +115,20 @@ p {
   gap: 12px;
   align-items: center;
 }
+.topbar-left {
+  display: flex;
+  gap: 12px;
+  align-items: center;
+  min-width: 0;
+}
+.sidebar-toggle {
+  font-size: 14px;
+  line-height: 1;
+  padding: 6px 8px;
+  background: transparent;
+  border-color: transparent;
+  color: #5e6f80;
+}
 .brand strong {
   font-size: 16px;
   letter-spacing: -0.4px;
@@ -156,17 +170,28 @@ p {
 }
 .workspace {
   flex: 1;
-  display: grid;
-  grid-template-columns: 224px minmax(420px, 1fr) 348px;
+  display: flex;
   min-height: 0;
 }
+.work-area {
+  flex: 1;
+  min-width: 0;
+  min-height: 0;
+  display: grid;
+  grid-template-columns: minmax(320px, 1fr) 6px var(--panel-size, 50%);
+}
 .sidebar {
+  flex: none;
+  width: 224px;
   background: #f6f7f9;
   border-right: 1px solid var(--line);
   display: flex;
   flex-direction: column;
   min-height: 0;
   padding: 20px 12px 12px;
+}
+.sidebar.collapsed {
+  display: none;
 }
 .sidebar-title {
   display: flex;
@@ -340,6 +365,31 @@ p {
   display: flex;
   flex-direction: column;
 }
+.panel-column {
+  min-width: 0;
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
+}
+.split-handle {
+  flex: none;
+  cursor: col-resize;
+  background: #eef1f5;
+  border-left: 1px solid var(--line);
+  border-right: 1px solid var(--line);
+}
+.split-handle:hover,
+.split-handle:focus-visible {
+  background: #d6e2ee;
+}
+.split-handle:focus-visible {
+  outline: 2px solid #648bae;
+  outline-offset: -2px;
+}
+body.resizing {
+  cursor: col-resize;
+  user-select: none;
+}
 .graph-region {
   flex: 1;
   display: flex;
@@ -489,6 +539,8 @@ p {
   color: #8c98a5;
 }
 .node-panel {
+  flex: 1;
+  min-width: 0;
   border-left: 1px solid var(--line);
   background: white;
   display: flex;
@@ -745,7 +797,7 @@ p {
   margin-bottom: 20px;
 }
 .workspace-empty {
-  grid-column: 2/4;
+  grid-column: 1 / -1;
   display: flex;
   align-items: center;
   justify-content: center;
@@ -798,13 +850,13 @@ p {
   margin-top: 23px;
 }
 @media (min-width: 1600px) {
-  .workspace {
-    grid-template-columns: 240px minmax(500px, 1fr) 380px;
+  .sidebar {
+    width: 240px;
   }
 }
 @media (max-width: 1160px) {
-  .workspace {
-    grid-template-columns: 195px minmax(380px, 1fr) 320px;
+  .sidebar {
+    width: 195px;
   }
   .graph-toolbar {
     padding: 10px 12px;

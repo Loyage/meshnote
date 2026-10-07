@@ -11,7 +11,7 @@ describe('StableGraphLayout incremental regressions', () => {
     const original = await layout.layout(['a', 'b'].map(node), [edge('a', 'b')], []);
     const result = await layout.layout(['a', 'd', 'c', 'b'].map(node), [edge('a', 'b'), edge('a', 'c'), edge('c', 'd')], original);
     for (const position of original) expect(result.find(p => p.nodeId === position.nodeId)).toEqual(position);
-    expect(result.find(p => p.nodeId === 'd')!.x).toBeGreaterThan(result.find(p => p.nodeId === 'c')!.x);
+    expect(result.find(p => p.nodeId === 'd')!.y).toBeGreaterThan(result.find(p => p.nodeId === 'c')!.y);
     for (let i = 0; i < result.length; i++) for (let j = i + 1; j < result.length; j++) {
       expect(Math.abs(result[i].x - result[j].x) >= NODE_WIDTH || Math.abs(result[i].y - result[j].y) >= NODE_HEIGHT).toBe(true);
     }

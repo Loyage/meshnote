@@ -2,9 +2,9 @@
 
 ## v0.1 · 当前 MVP
 
-- [x] Graph-first 三栏工作台、Transformer Demo
+- [x] Graph-first 可折叠侧栏工作台、Transformer Demo
 - [x] Mesh CRUD、root 与历史节点 branch
-- [x] ELK 左→右布局与稳定增量位置、拖动坐标持久化
+- [x] ELK 上→下布局与稳定增量位置、拖动坐标持久化
 - [x] 平移/缩放/fit/定位/MiniMap、祖先路径高亮
 - [x] 独立 ContextBuilder，不带入兄弟分支
 - [x] pending → streaming → completed/error、取消与中断恢复

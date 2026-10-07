@@ -1,5 +1,13 @@
-import { expect, test } from "@playwright/test";
+import { expect, test, type Page } from "@playwright/test";
 import type { LLMMessage } from "../src/domain/contracts";
+
+async function expandSidebar(page: Page) {
+  const toggle = page.locator(".sidebar-toggle");
+  await expect(toggle).toBeVisible();
+  if ((await toggle.getAttribute("aria-expanded")) === "false")
+    await toggle.click();
+  await expect(page.locator("#workspace-sidebar")).toBeVisible();
+}
 
 test("proxy path excludes siblings, title failure falls back, stream errors preserve content", async ({
   page,
@@ -22,6 +30,7 @@ test("proxy path excludes siblings, title failure falls back, stream errors pres
   });
   await page.goto("/");
   await expect(page.getByText("fixture-model", { exact: true })).toBeVisible();
+  await expandSidebar(page);
   await page
     .getByRole("textbox", { name: "搜索历史节点" })
     .fill("Q/K/V 分别是什么");

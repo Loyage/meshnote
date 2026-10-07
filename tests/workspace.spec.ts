@@ -22,6 +22,13 @@ async function stored(page: Page): Promise<Workspace> {
     }
   });
 }
+async function expandSidebar(page: Page) {
+  const toggle = page.locator(".sidebar-toggle");
+  await expect(toggle).toBeVisible();
+  if ((await toggle.getAttribute("aria-expanded")) === "false")
+    await toggle.click();
+  await expect(page.locator("#workspace-sidebar")).toBeVisible();
+}
 async function searchAndOpen(page: Page, query: string, title: string) {
   await expect(page.getByRole("dialog")).toHaveCount(0);
   await page.getByRole("textbox", { name: "搜索历史节点" }).fill(query);
@@ -42,6 +49,7 @@ test("demo graph, historical branches, streaming, stable layout, search and relo
   page.on("pageerror", (error) => errors.push(error.message));
   await page.goto("/");
   await expect(page.getByText("Mock · 演示模式")).toBeVisible();
+  await expandSidebar(page);
   await expect(page.locator(".react-flow__node")).toHaveCount(8);
   await expect(page.locator(".react-flow__edge")).toHaveCount(7);
   await expect.poll(async () => (await stored(page)).positions.length).toBe(8);
@@ -52,7 +60,7 @@ test("demo graph, historical branches, streaming, stable layout, search and relo
         .locator('[data-id="demo-qk-separate"]')
         .boundingBox();
       const canvas = await page.getByTestId("graph-canvas").boundingBox();
-      return last!.x + last!.width < canvas!.x + canvas!.width - 20;
+      return last!.y + last!.height < canvas!.y + canvas!.height - 20;
     })
     .toBe(true);
   await page.screenshot({ path: "test-results/demo-workspace.png" });
@@ -106,6 +114,7 @@ test("Mesh CRUD, root creation, cross-mesh search, cancellation and persistence"
   page,
 }) => {
   await page.goto("/");
+  await expandSidebar(page);
   await page.getByRole("button", { name: "创建 Mesh", exact: true }).click();
   await page.getByRole("textbox", { name: "Mesh 名称" }).fill("Neural ODE");
   await page.getByRole("button", { name: "保存", exact: true }).click();
@@ -147,4 +156,31 @@ test("Mesh CRUD, root creation, cross-mesh search, cancellation and persistence"
     page.getByRole("heading", { name: "让问题连接成知识" }),
   ).toBeVisible();
   expect((await stored(page)).nodes).toEqual([]);
+});
+
+test("workspace panel starts collapsed and the canvas/answer split is adjustable", async ({
+  page,
+}) => {
+  await page.goto("/");
+  await expect(page.getByText("Mock · 演示模式")).toBeVisible();
+  const sidebar = page.locator("#workspace-sidebar");
+  await expect(sidebar).toBeHidden();
+  await page.getByRole("button", { name: "展开工作空间" }).click();
+  await expect(sidebar).toBeVisible();
+  await page.getByRole("button", { name: "收起工作空间" }).click();
+  await expect(sidebar).toBeHidden();
+  const canvas = await page.getByTestId("graph-canvas").boundingBox();
+  const panel = await page.locator(".node-panel").boundingBox();
+  expect(canvas && panel).toBeTruthy();
+  const ratio = canvas!.width / (canvas!.width + panel!.width);
+  expect(ratio).toBeGreaterThan(0.45);
+  expect(ratio).toBeLessThan(0.55);
+  const handle = page.getByRole("separator", {
+    name: "调整画布与对话宽度",
+  });
+  await handle.focus();
+  await handle.press("ArrowLeft");
+  await expect(handle).toHaveAttribute("aria-valuenow", "52");
+  const widened = await page.locator(".node-panel").boundingBox();
+  expect(widened!.width).toBeGreaterThan(panel!.width);
 });

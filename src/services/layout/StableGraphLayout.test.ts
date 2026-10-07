@@ -16,7 +16,7 @@ function noOverlap(positions: NodePosition[]) {
     }
 }
 describe("StableGraphLayout", () => {
-  it("lays out the demo left-to-right without overlap", async () => {
+  it("lays out the demo top-to-bottom without overlap", async () => {
     const data = createDemoWorkspace();
     const result = await new StableGraphLayout().layout(
       data.nodes,
@@ -27,8 +27,8 @@ describe("StableGraphLayout", () => {
     noOverlap(result);
     for (const edge of data.edges)
       expect(
-        result.find((p) => p.nodeId === edge.targetNodeId)!.x,
-      ).toBeGreaterThan(result.find((p) => p.nodeId === edge.sourceNodeId)!.x);
+        result.find((p) => p.nodeId === edge.targetNodeId)!.y,
+      ).toBeGreaterThan(result.find((p) => p.nodeId === edge.sourceNodeId)!.y);
   });
   it("preserves every old position when adding many siblings and descendants", async () => {
     const data = createDemoWorkspace();

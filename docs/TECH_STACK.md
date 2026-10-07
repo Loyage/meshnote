@@ -4,9 +4,9 @@
 
 - **React + TypeScript + Vite**：桌面优先 Web MVP。单 package，避免空壳 monorepo；领域与适配器边界支持以后提取 core/web/electron。
 - **React Flow (@xyflow/react)**：图为视觉中心，自定义紧凑卡片、缩放、拖动画布、选中、定位、MiniMap 和键盘可访问性均可复用。React 卡片可以直接表达问答节点状态。
-- **ELK.js layered / RIGHT**：初始布局与用户主动重排使用左→右分层布局。新增节点采用固定旧位置的增量放置，避开已有卡片；不因 streaming/title 变化重新布局。主动重排是恢复全局紧凑性的显式操作。
+- **ELK.js layered / DOWN**：初始布局与用户主动重排使用上→下分层布局（分支横向展开）。新增节点采用固定旧位置的增量放置，避开已有卡片；不因 streaming/title 变化重新布局。主动重排是恢复全局紧凑性的显式操作。
 - **Zustand**：管理视图选择、搜索与 application snapshot；领域生命周期不放入组件。
-- **普通 CSS + design tokens**：安静、紧凑、专业的三栏工作台，不引入非必要 UI 框架。
+- **普通 CSS + design tokens**：安静、紧凑、专业的可折叠侧栏工作台，不引入非必要 UI 框架。
 - **IndexedDB**：本地事务持久化，由 Repository adapter 封装；SQLite 可以替换，不允许 UI 直接操作存储。
 - **LLMProvider**：chat 的 AsyncIterable 流式接口，generateTitle / summarize 独立能力。Mock 与 OpenAI-compatible 实现可替换。
 - **本地 Node HTTP 代理**（用户已确认）：密钥只读服务端环境变量。开发时 Vite 转发 /api；生产本机运行 Node 服务并托管 dist。默认不配置 key 即 Mock；不实现公网账号/权限系统。

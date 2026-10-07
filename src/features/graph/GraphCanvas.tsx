@@ -49,7 +49,7 @@ const KnowledgeCard = memo(({ data, selected }: NodeProps<CardNode>) => (
   <div
     className={`knowledge-card ${selected ? "selected" : ""} ${data.onPath ? "on-path" : ""}`}
   >
-    <Handle type="target" position={Position.Left} isConnectable={false} />
+    <Handle type="target" position={Position.Top} isConnectable={false} />
     <div className="card-title" title={data.title}>
       {data.title}
     </div>
@@ -64,7 +64,7 @@ const KnowledgeCard = memo(({ data, selected }: NodeProps<CardNode>) => (
       </span>
       <span className="branch-count">{data.branches} 分支</span>
     </div>
-    <Handle type="source" position={Position.Right} isConnectable={false} />
+    <Handle type="source" position={Position.Bottom} isConnectable={false} />
   </div>
 ));
 const nodeTypes = { knowledge: KnowledgeCard };
@@ -163,17 +163,17 @@ function Canvas({
       handles: [
         {
           type: "target",
-          position: Position.Left,
-          x: -2.5,
-          y: NODE_HEIGHT / 2 - 2.5,
+          position: Position.Top,
+          x: NODE_WIDTH / 2 - 2.5,
+          y: -2.5,
           width: 5,
           height: 5,
         },
         {
           type: "source",
-          position: Position.Right,
-          x: NODE_WIDTH - 2.5,
-          y: NODE_HEIGHT / 2 - 2.5,
+          position: Position.Bottom,
+          x: NODE_WIDTH / 2 - 2.5,
+          y: NODE_HEIGHT - 2.5,
           width: 5,
           height: 5,
         },

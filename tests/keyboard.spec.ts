@@ -13,6 +13,9 @@ test('keyboard activation selects detail and arrow movement survives reload', as
   await card.press('ArrowRight');
   await expect.poll(() => card.evaluate(element => (element as HTMLElement).style.transform)).not.toBe(before);
   const moved = await card.evaluate(element => (element as HTMLElement).style.transform);
+  // The workspace panel starts collapsed; reveal it before renaming the Mesh.
+  const toggle = page.locator('.sidebar-toggle');
+  if ((await toggle.getAttribute('aria-expanded')) === 'false') await toggle.click();
   // A service command creates a persistence-queue barrier before reload.
   await page.getByRole('button', { name: '重命名 Transformer' }).click();
   await page.getByRole('button', { name: '保存', exact: true }).click();

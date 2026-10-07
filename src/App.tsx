@@ -1,4 +1,11 @@
-import { useEffect, useRef, useState, useSyncExternalStore } from "react";
+import {
+  useEffect,
+  useRef,
+  useState,
+  useSyncExternalStore,
+  type CSSProperties,
+  type PointerEvent as ReactPointerEvent,
+} from "react";
 import { createApplication } from "./app/createApplication";
 import type {
   ApplicationService,
@@ -13,6 +20,24 @@ import { useNavigation } from "./stores/useNavigation";
 let startup:
   | Promise<{ service: ApplicationService; label: string }>
   | undefined;
+const SIDEBAR_KEY = "meshnote.sidebar";
+const PANEL_KEY = "meshnote.panel";
+const PANEL_MIN = 25;
+const PANEL_MAX = 75;
+function readStored(key: string): string | null {
+  try {
+    return localStorage.getItem(key);
+  } catch {
+    return null;
+  }
+}
+function writeStored(key: string, value: string) {
+  try {
+    localStorage.setItem(key, value);
+  } catch {
+    // Private mode or quota errors must not break the workbench.
+  }
+}
 function boot() {
   startup ??= createProvider().then(async ({ provider, label }) => ({
     service: await createApplication(provider),
@@ -132,6 +157,49 @@ function Workbench({
     action: "create" | "rename" | "delete";
     mesh?: Mesh;
   } | null>(null);
+  // The workspace panel starts collapsed to give the graph and answer more room.
+  const [sidebarCollapsed, setSidebarCollapsed] = useState(
+    () => (readStored(SIDEBAR_KEY) ?? "collapsed") === "collapsed",
+  );
+  const [panelPercent, setPanelPercent] = useState(() => {
+    const stored = Number(readStored(PANEL_KEY));
+    return Number.isFinite(stored) && stored > 0
+      ? Math.min(PANEL_MAX, Math.max(PANEL_MIN, stored))
+      : 50;
+  });
+  const workArea = useRef<HTMLDivElement>(null);
+  useEffect(() => {
+    writeStored(SIDEBAR_KEY, sidebarCollapsed ? "collapsed" : "expanded");
+  }, [sidebarCollapsed]);
+  useEffect(() => {
+    writeStored(PANEL_KEY, String(panelPercent));
+  }, [panelPercent]);
+  const startResize = (event: ReactPointerEvent<HTMLDivElement>) => {
+    if (event.button !== 0) return;
+    const element = workArea.current;
+    if (!element) return;
+    event.preventDefault();
+    const rect = element.getBoundingClientRect();
+    const move = (pointer: PointerEvent) => {
+      const percentage = ((rect.right - pointer.clientX) / rect.width) * 100;
+      setPanelPercent(Math.min(PANEL_MAX, Math.max(PANEL_MIN, percentage)));
+    };
+    const end = () => {
+      window.removeEventListener("pointermove", move);
+      window.removeEventListener("pointerup", end);
+      document.body.classList.remove("resizing");
+    };
+    window.addEventListener("pointermove", move);
+    window.addEventListener("pointerup", end);
+    document.body.classList.add("resizing");
+  };
+  const nudgePanel = (delta: number) =>
+    setPanelPercent((value) =>
+      Math.min(PANEL_MAX, Math.max(PANEL_MIN, value + delta)),
+    );
+  const panelStyle = {
+    "--panel-size": `${panelPercent}%`,
+  } as CSSProperties;
   const mesh =
     workspace.meshes.find((item) => item.id === nav.meshId) ??
     workspace.meshes[0];
@@ -151,12 +219,25 @@ function Workbench({
   }
   const results = service.search(nav.query);
   return (
-    <div className="app-shell">
+    <div className={`app-shell${sidebarCollapsed ? " sidebar-collapsed" : ""}`}>
       <header className="topbar">
-        <div className="brand">
-          <span className="brand-mark">M</span>
-          <strong>MeshNote</strong>
-          <span className="version">LOCAL WORKSPACE</span>
+        <div className="topbar-left">
+          <button
+            type="button"
+            className="sidebar-toggle"
+            aria-expanded={!sidebarCollapsed}
+            aria-controls="workspace-sidebar"
+            aria-label={sidebarCollapsed ? "展开工作空间" : "收起工作空间"}
+            title={sidebarCollapsed ? "展开工作空间" : "收起工作空间"}
+            onClick={() => setSidebarCollapsed((value) => !value)}
+          >
+            ☰
+          </button>
+          <div className="brand">
+            <span className="brand-mark">M</span>
+            <strong>MeshNote</strong>
+            <span className="version">LOCAL WORKSPACE</span>
+          </div>
         </div>
         <div className="topbar-right">
           <span className="provider-badge">
@@ -173,7 +254,11 @@ function Workbench({
         </div>
       )}
       <main className="workspace">
-        <aside className="sidebar" aria-label="Mesh 导航">
+        <aside
+          id="workspace-sidebar"
+          className={`sidebar${sidebarCollapsed ? " collapsed" : ""}`}
+          aria-label="Mesh 导航"
+        >
           <div className="sidebar-title">
             <span>工作空间</span>
             <span>{workspace.meshes.length} MESHES</span>
@@ -275,43 +360,67 @@ function Workbench({
             <div className="local-note">◉ IndexedDB · 本机存储</div>
           </div>
         </aside>
-        {mesh ? (
-          <>
-            <div className="graph-column">
-              {pathError && (
-                <div className="inline-error" role="alert">
-                  {pathError}
-                </div>
-              )}
-              <GraphCanvas
-                mesh={mesh}
-                workspace={workspace}
-                service={service}
-                path={path}
+        <div className="work-area" ref={workArea} style={panelStyle}>
+          {mesh ? (
+            <>
+              <div className="graph-column">
+                {pathError && (
+                  <div className="inline-error" role="alert">
+                    {pathError}
+                  </div>
+                )}
+                <GraphCanvas
+                  mesh={mesh}
+                  workspace={workspace}
+                  service={service}
+                  path={path}
+                />
+              </div>
+              <div
+                className="split-handle"
+                role="separator"
+                aria-orientation="vertical"
+                aria-label="调整画布与对话宽度"
+                aria-valuemin={PANEL_MIN}
+                aria-valuemax={PANEL_MAX}
+                aria-valuenow={Math.round(panelPercent)}
+                tabIndex={0}
+                onPointerDown={startResize}
+                onKeyDown={(event) => {
+                  if (event.key === "ArrowLeft") {
+                    event.preventDefault();
+                    nudgePanel(2);
+                  } else if (event.key === "ArrowRight") {
+                    event.preventDefault();
+                    nudgePanel(-2);
+                  }
+                }}
               />
+              <div className="panel-column">
+                <NodePanel
+                  key={mesh.id}
+                  mesh={mesh}
+                  node={node}
+                  path={path}
+                  snapshot={snapshot}
+                  service={service}
+                />
+              </div>
+            </>
+          ) : (
+            <div className="workspace-empty">
+              <span className="empty-symbol">◇</span>
+              <h1>让问题连接成知识</h1>
+              <p>创建一个 Mesh，开始你的第一条探索路径。</p>
+              <button
+                className="primary"
+                onClick={() => setDialog({ action: "create" })}
+              >
+                创建 Mesh
+              </button>
             </div>
-            <NodePanel
-              key={mesh.id}
-              mesh={mesh}
-              node={node}
-              path={path}
-              snapshot={snapshot}
-              service={service}
-            />
-          </>
-        ) : (
-          <div className="workspace-empty">
-            <span className="empty-symbol">◇</span>
-            <h1>让问题连接成知识</h1>
-            <p>创建一个 Mesh，开始你的第一条探索路径。</p>
-            <button
-              className="primary"
-              onClick={() => setDialog({ action: "create" })}
-            >
-              创建 Mesh
-            </button>
-          </div>
-        )}
+          )}
+        </div>
       </main>
       {dialog && (
         <MeshDialog

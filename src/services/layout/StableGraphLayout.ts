@@ -8,8 +8,10 @@ import type {
 
 export const NODE_WIDTH = 196;
 export const NODE_HEIGHT = 76;
-const GAP_X = 48;
-const GAP_Y = 30;
+/** Horizontal gap between sibling branches (the main axis runs top→bottom). */
+const GAP_X = 40;
+/** Vertical gap between depth layers. */
+const GAP_Y = 48;
 
 /** ELK for initial/global arrangement; append-only placement preserves the mental map. */
 export class StableGraphLayout implements GraphLayout {
@@ -45,9 +47,9 @@ export class StableGraphLayout implements GraphLayout {
         id: "mesh",
         layoutOptions: {
           "elk.algorithm": "layered",
-          "elk.direction": "RIGHT",
-          "elk.spacing.nodeNode": String(GAP_Y),
-          "elk.layered.spacing.nodeNodeBetweenLayers": String(GAP_X),
+          "elk.direction": "DOWN",
+          "elk.spacing.nodeNode": String(GAP_X),
+          "elk.layered.spacing.nodeNodeBetweenLayers": String(GAP_Y),
           "elk.layered.considerModelOrder.strategy": "NODES_AND_EDGES",
         },
         children: nodes.map((node) => ({
@@ -81,17 +83,17 @@ export class StableGraphLayout implements GraphLayout {
         (edge) => edge.targetNodeId === node.id && known.has(edge.sourceNodeId),
       );
       const source = incoming ? known.get(incoming.sourceNodeId) : undefined;
-      const x = source ? source.x + NODE_WIDTH + GAP_X : 12;
-      const startY = source?.y ?? 12;
-      let y = startY;
-      // Search alternating lanes without moving any existing card.
+      const y = source ? source.y + NODE_HEIGHT + GAP_Y : 12;
+      const startX = source?.x ?? 12;
+      let x = startX;
+      // Search alternating horizontal lanes without moving any existing card.
       for (let lane = 0; ; lane++) {
-        y =
-          startY +
-          Math.ceil(lane / 2) * (lane % 2 ? 1 : -1) * (NODE_HEIGHT + GAP_Y);
+        x =
+          startX +
+          Math.ceil(lane / 2) * (lane % 2 ? 1 : -1) * (NODE_WIDTH + GAP_X);
         const collision = [...known.values()].some(
           (p) =>
-            Math.abs(p.x - x) < NODE_WIDTH + 20 &&
+            Math.abs(p.x - x) < NODE_WIDTH + GAP_X &&
             Math.abs(p.y - y) < NODE_HEIGHT + GAP_Y,
         );
         if (!collision) break;

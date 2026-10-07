@@ -10,7 +10,7 @@ export function createDemoWorkspace(now = new Date().toISOString()): Workspace {
   const entries = [
     {
       id: 'demo-transformer-root', title: 'Transformer 是什么？', question: 'Transformer 是什么？它如何理解序列？',
-      answer: 'Transformer 是一种以 **Attention（注意力）** 为核心的神经网络架构。\n\n它让序列中的每个位置根据当前任务，直接读取其他位置的信息，而不必像循环神经网络那样逐步传递状态。\n\n一个典型模块由多头注意力、逐位置前馈网络、残差连接和归一化组成。位置编码补充顺序信息。原始 Transformer 使用编码器—解码器结构；现代语言模型也常使用仅解码器结构。\n\n从右侧的分支继续探索：Attention 如何选择信息？Q/K/V 各自承担什么角色？位置又是如何被表示的？',
+      answer: 'Transformer 是一种以 **Attention（注意力）** 为核心的神经网络架构。\n\n它让序列中的每个位置根据当前任务，直接读取其他位置的信息，而不必像循环神经网络那样逐步传递状态。\n\n一个典型模块由多头注意力、逐位置前馈网络、残差连接和归一化组成。位置编码补充顺序信息。原始 Transformer 使用编码器—解码器结构；现代语言模型也常使用仅解码器结构。\n\n从下方的分支继续探索：Attention 如何选择信息？Q/K/V 各自承担什么角色？位置又是如何被表示的？',
     },
     {
       id: 'demo-attention', parent: 'demo-transformer-root', title: '什么是 Attention？', question: '什么是 Attention？为什么它能帮助模型理解上下文？',
