@@ -1,5 +1,21 @@
 # MVP 验证记录
 
+## 软件设置与 LLM 配置验证（2026-10-08）
+
+本工作分支集成后实际运行：
+
+- `bun run test`：15 文件、153 项通过，含设置校验、串行保存、私有权限、原子写入、重启恢复、密钥保留/删除、同源拒绝、在途 provider 快照及主题存储故障。
+- `bun run build`：TypeScript 与生产构建通过；仍有大 chunk 警告（主包约 622 kB，ELK 约 1.44 MB）。
+- `MESHNOTE_E2E_PORT=18878 bun run test:e2e -- --config=playwright.production.config.ts`：完整 Chromium 10 项通过，实际启动/关闭 Node 生产服务，使用测试专属配置文件。
+- 新浏览器路径覆盖明暗切换与刷新、布局恢复、保留选中节点、未保存草稿确认、连接错误清洗、生成期间禁用保存、受控真实 API 测试、无需刷新切换模型、密钥留空保留/明确删除；新输入密钥未进入 localStorage/sessionStorage，配置接口不返回密钥。
+- 已检查暗色设置页面截图 `test-results/settings-dark.png`。默认开发 E2E 因 5173/8787 已占用无法启动，未停止其他服务；生产流程使用空闲端口完整复验。
+
+完整日志：`/tmp/meshnote-w4-tests-final.log`、`/tmp/meshnote-w4-build-final.log`、`/tmp/meshnote-w4-e2e-production-final.log`。失败日志保留：`/tmp/meshnote-w4-e2e-dev.log`（端口占用）、`/tmp/meshnote-w4-e2e-final.log`（新增测试误把收到首个 delta 前的 pending 状态当作 streaming；改为断言生成控制按钮后完整重跑通过）。
+
+真实外网供应商未实测；连接测试仅证明最小非流式请求可用，不代表完整 SSE 兼容。服务端密钥为 0600 明文文件，单进程保存，不支持多服务进程共用配置文件。
+
+以下为此前 MVP 历史验证记录。
+
 ## 实际运行
 
 环境：Bun 1.4.2、Node v24.20.0、Linux、Playwright Chromium。包管理与命令入口已由 npm 切换为 Bun（`bun install` / `bun run`），Vite、Vitest、Playwright 与本地服务运行时仍由 Node 承载。

@@ -5,9 +5,9 @@ import { realpath, stat } from 'node:fs/promises';
 import { extname, resolve, sep } from 'node:path';
 import { pipeline } from 'node:stream/promises';
 import type { LLMMessage, LLMProvider } from '../src/domain/contracts';
-import { MockLLMProvider } from '../src/services/llm/MockLLMProvider';
 import { safeModelError } from '../src/services/llm/streams';
 import { OpenAICompatibleProvider } from './OpenAICompatibleProvider';
+import { initialLLMSettings, LLMSettingsManager, publicLLMSettings, resolveDraft, SettingsError, type LLMSettings } from './llmSettings';
 import type { ServerConfig } from './config';
 
 const BODY_LIMIT = 1_048_576;
@@ -106,9 +106,10 @@ async function serveStatic(request: IncomingMessage, response: ServerResponse, d
 
 export function createMeshNoteServer(
   config: ServerConfig,
-  options: { distDirectory?: string; provider?: LLMProvider } = {},
+  options: { distDirectory?: string; provider?: LLMProvider; settings?: LLMSettings; settingsFile?: string } = {},
 ) {
-  const provider = options.provider ?? (config.apiKey ? new OpenAICompatibleProvider(config) : new MockLLMProvider());
+  // Disk loading is explicitly performed by index.ts, never by ordinary server construction.
+  const settingsManager = new LLMSettingsManager(options.settings ?? initialLLMSettings(config), options.settingsFile, options.provider);
   const server = createServer((request, response) => {
     response.setHeader('X-Content-Type-Options', 'nosniff');
     response.setHeader('Referrer-Policy', 'no-referrer');
@@ -131,11 +132,39 @@ export function createMeshNoteServer(
       }
       const url = new URL(request.url ?? '/', `http://${request.headers.host}`);
       if (url.pathname === '/api/config' && request.method === 'GET') {
-        json(response, 200, { mode: config.apiKey ? 'openai-compatible' : 'mock', model: config.apiKey ? config.model : null });
+        const { settings } = settingsManager.snapshot();
+        json(response, 200, { mode: settings.mode, model: settings.mode === 'mock' ? null : settings.model });
         return;
+      }
+      if (url.pathname === '/api/settings/llm' || url.pathname === '/api/settings/llm/test') {
+        const testing = url.pathname.endsWith('/test');
+        if (!testing && request.method === 'GET') {
+          json(response, 200, publicLLMSettings(settingsManager.snapshot().settings)); return;
+        }
+        if (request.method !== (testing ? 'POST' : 'PUT')) throw new RequestError(405, '请求方法不支持');
+        // Vite preserves the browser Host while proxying. Unlike other APIs, do not accept
+        // a different localhost origin/port here. Headerless local CLI clients remain usable.
+        const site = request.headers['sec-fetch-site'];
+        if ((origin !== undefined && origin !== `http://${request.headers.host.toLowerCase()}`) ||
+            (site !== undefined && (site !== 'same-origin' || origin === undefined))) {
+          throw new RequestError(403, '配置操作只允许同源请求');
+        }
+        if (!testing) {
+          json(response, 200, await settingsManager.save(readBody(request), controller.signal)); return;
+        }
+        const snapshot = settingsManager.snapshot().settings;
+        const draft = resolveDraft(await readBody(request), snapshot);
+        controller.signal.throwIfAborted();
+        if (draft.mode === 'mock') {
+          json(response, 200, { ok: true, message: 'Mock 演示模式，不访问外部模型' }); return;
+        }
+        await new OpenAICompatibleProvider(draft).testConnection(controller.signal);
+        json(response, 200, { ok: true, message: '模型连接测试成功' }); return;
       }
       if (['/api/chat', '/api/title', '/api/summarize'].includes(url.pathname)) {
         if (request.method !== 'POST') throw new RequestError(405, '此接口只接受 POST');
+        // Keep the provider snapshot for the whole request, even if settings are saved mid-flight.
+        const { provider } = settingsManager.snapshot();
         const body = await readBody(request);
         controller.signal.throwIfAborted();
         if (url.pathname === '/api/title') {
@@ -177,7 +206,7 @@ export function createMeshNoteServer(
         if (response.getHeader('Content-Type')?.toString().includes('application/x-ndjson')) {
           response.end(JSON.stringify({ type: 'error', message: safeModelError(error, controller.signal) }) + '\n');
         } else response.destroy();
-      } else if (error instanceof RequestError) {
+      } else if (error instanceof RequestError || error instanceof SettingsError) {
         json(response, error.status, { error: error.message });
       } else {
         json(response, 502, { error: safeModelError(error, controller.signal) });

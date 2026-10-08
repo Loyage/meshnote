@@ -46,7 +46,9 @@ React Flow 管渲染交互；独立 GraphLayout 管坐标。ELK DOWN 初始/主�
 
 ## Runtime / 安全
 
-`src/app/createApplication.ts` 组合 IndexedDB 与领域服务；`src/services/llm/createProvider.ts` 组合 Mock 或本地代理客户端。核心服务不访问 window/DOM。Node 代理仅绑定 loopback、固定环境配置的 upstream、校验 Origin/Host 和请求体上限，不把 API key 或原始上游错误暴露给前端。没有公网认证；不得把服务直接暴露到互联网。Electron 以后使用 main-process provider / SQLite adapters，保持 UI 与领域契约。
+`src/app/createApplication.ts` 组合 IndexedDB 与领域服务；`src/services/llm/createProvider.ts` 组合 Mock 或本地代理客户端，`RuntimeLLMProvider` 在设置保存后替换后续调用的 provider，不重建领域服务或工作空间。核心服务不访问 window/DOM。Node 代理仅绑定 loopback、校验 Origin/Host 和请求体上限；upstream 由 `.env` 初始配置或服务端私有设置文件控制，chat/title/summarize 不接受客户端 URL/密钥。设置接口返回密钥是否存在而非密钥本身；写入与连接测试要求严格浏览器同源，文件原子保存，单进程串行提交。在途请求保留旧 provider 快照，不回传原始上游错误。没有公网认证；不得把服务直接暴露到互联网。Electron 以后使用 main-process provider / SQLite adapters，保持 UI 与领域契约。
+
+`src/features/settings/` 提供软件设置页面、LLM 设置客户端与主题管理。主题和布局偏好保存在当前 origin 的 localStorage，知识内容仍保存在 IndexedDB；新输入密钥仅存在当前表单内存中，提交给本机服务后不写浏览器存储。主题使用 CSS 变量覆盖图、Markdown、表单及错误状态。
 
 ## 模块所有权
 

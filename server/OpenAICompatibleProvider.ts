@@ -61,7 +61,7 @@ export class OpenAICompatibleProvider implements LLMProvider {
     throw new Error('上游模型流中断，未收到 [DONE]');
   }
 
-  private async completion(messages: LLMMessage[], signal?: AbortSignal, maxTokens?: number): Promise<string> {
+  private async completion(messages: LLMMessage[], signal?: AbortSignal, maxTokens?: number, allowLength = false): Promise<string> {
     const combined = combineSignal(signal, this.config.timeoutMs);
     const response = await this.request(messages, false, combined, maxTokens);
     let raw = '';
@@ -73,10 +73,17 @@ export class OpenAICompatibleProvider implements LLMProvider {
     if (!record(choice) || !record(choice.message) || typeof choice.message.content !== 'string') {
       throw new Error('上游模型响应没有文本');
     }
-    if (choice.finish_reason && choice.finish_reason !== 'stop') throw new Error('上游模型响应不完整');
+    if (choice.finish_reason && choice.finish_reason !== 'stop' && !(allowLength && choice.finish_reason === 'length')) {
+      throw new Error('上游模型响应不完整');
+    }
     const text = choice.message.content.trim();
     if (!text) throw new Error('上游模型响应没有文本');
     return text;
+  }
+
+  /** Minimal non-streaming request; discard the response text rather than exposing it. */
+  async testConnection(signal?: AbortSignal): Promise<void> {
+    await this.completion([{ role: 'user', content: 'Reply OK.' }], signal, 1, true);
   }
 
   async generateTitle(question: string, answer: string, signal?: AbortSignal): Promise<string> {

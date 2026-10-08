@@ -16,9 +16,15 @@ import { createProvider } from "./services/llm/createProvider";
 import { GraphCanvas } from "./features/graph/GraphCanvas";
 import { NodePanel } from "./features/conversation/NodePanel";
 import { useNavigation } from "./stores/useNavigation";
+import { RuntimeLLMProvider } from "./services/llm/RuntimeLLMProvider";
+import { MockLLMProvider } from "./services/llm/MockLLMProvider";
+import { ProxyLLMProvider } from "./services/llm/ProxyLLMProvider";
+import { SettingsPage } from "./features/settings/SettingsPage";
+import { applyTheme, readTheme } from "./features/settings/theme";
+import { loadLLMSettings, type LLMSettings } from "./features/settings/llmSettings";
 
 let startup:
-  | Promise<{ service: ApplicationService; label: string }>
+  | Promise<{ service: ApplicationService; label: string; provider: RuntimeLLMProvider }>
   | undefined;
 const SIDEBAR_KEY = "meshnote.sidebar";
 const PANEL_KEY = "meshnote.panel";
@@ -39,10 +45,16 @@ function writeStored(key: string, value: string) {
   }
 }
 function boot() {
-  startup ??= createProvider().then(async ({ provider, label }) => ({
-    service: await createApplication(provider),
-    label,
-  }));
+  startup ??= createProvider().then(async ({ provider, label }) => {
+    if (provider instanceof ProxyLLMProvider) {
+      // Match the server timeout without turning a failed config fetch into Mock.
+      const settings = await loadLLMSettings();
+      if (settings.mode === 'openai-compatible' && settings.model === label)
+        provider = new ProxyLLMProvider('/api', settings.timeoutMs + 5000);
+    }
+    const runtimeProvider = new RuntimeLLMProvider(provider);
+    return { service: await createApplication(runtimeProvider), label, provider: runtimeProvider };
+  });
   return startup;
 }
 function MeshDialog({
@@ -145,11 +157,24 @@ function MeshDialog({
 }
 function Workbench({
   service,
-  label,
+  label: initialLabel,
+  provider,
 }: {
   service: ApplicationService;
   label: string;
+  provider: RuntimeLLMProvider;
 }) {
+  const [label, setLabel] = useState(initialLabel);
+  const [settingsOpen, setSettingsOpen] = useState(false);
+  const [theme, setTheme] = useState(readTheme);
+  const settingsButton = useRef<HTMLButtonElement>(null);
+  const savedSettings = (settings: LLMSettings) => {
+    provider.replace(settings.mode === 'mock' ? new MockLLMProvider() : new ProxyLLMProvider('/api', settings.timeoutMs + 5000));
+    const nextLabel = settings.mode === 'mock' ? 'Mock · 演示模式' : settings.model;
+    setLabel(nextLabel);
+    // React StrictMode or a later mount must not restore the initial badge.
+    startup = Promise.resolve({ service, label: nextLabel, provider });
+  };
   const snapshot = useSyncExternalStore(service.subscribe, service.getSnapshot);
   const { workspace } = snapshot;
   const nav = useNavigation();
@@ -245,6 +270,7 @@ function Workbench({
             {label}
           </span>
           <span className="privacy-note">知识留在本地</span>
+          <button ref={settingsButton} type="button" aria-pressed={settingsOpen} onClick={() => setSettingsOpen(true)}>软件设置</button>
         </div>
       </header>
       {snapshot.error && (
@@ -253,7 +279,19 @@ function Workbench({
           <button onClick={() => service.clearError()}>关闭提示</button>
         </div>
       )}
-      <main className="workspace">
+      {settingsOpen ? (
+        <SettingsPage
+          theme={theme}
+          onTheme={(value) => { applyTheme(value); setTheme(value); }}
+          sidebarCollapsed={sidebarCollapsed}
+          onSidebar={setSidebarCollapsed}
+          panelPercent={panelPercent}
+          onPanel={setPanelPercent}
+          generating={!!snapshot.generatingNodeId}
+          onSaved={savedSettings}
+          onClose={() => { setSettingsOpen(false); settingsButton.current?.focus(); }}
+        />
+      ) : <main className="workspace">
         <aside
           id="workspace-sidebar"
           className={`sidebar${sidebarCollapsed ? " collapsed" : ""}`}
@@ -421,7 +459,7 @@ function Workbench({
             </div>
           )}
         </div>
-      </main>
+      </main>}
       {dialog && (
         <MeshDialog
           {...dialog}
@@ -436,6 +474,7 @@ export function App() {
   const [runtime, setRuntime] = useState<{
     service: ApplicationService;
     label: string;
+    provider: RuntimeLLMProvider;
   }>();
   const [error, setError] = useState("");
   useEffect(() => {

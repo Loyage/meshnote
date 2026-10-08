@@ -200,12 +200,12 @@ function Canvas({
       type: "smoothstep",
       className: active ? "ancestor-edge" : "",
       style: {
-        stroke: active ? "#587fa9" : "#bdc6d0",
+        stroke: active ? "var(--graph-edge-active)" : "var(--graph-edge)",
         strokeWidth: active ? 2 : 1.3,
       },
       markerEnd: {
         type: MarkerType.ArrowClosed,
-        color: active ? "#587fa9" : "#bdc6d0",
+        color: active ? "var(--graph-edge-active)" : "var(--graph-edge)",
         width: 15,
         height: 15,
       },
@@ -316,14 +316,16 @@ function Canvas({
           onlyRenderVisibleElements
           onNodeDoubleClick={(_, node) => selectNode(node.id)}
         >
-          <Background gap={22} size={1} color="#d7dde4" />
+          <Background gap={22} size={1} color="var(--graph-dots)" />
           <Controls showInteractive={false} />
           <MiniMap
             style={{ width: 130, height: 86 }}
             pannable
             zoomable
-            nodeColor={(node) => (node.selected ? "#648aae" : "#c7d2df")}
-            maskColor="rgba(242,245,249,.65)"
+            nodeColor={(node) =>
+              node.selected ? "var(--minimap-node-selected)" : "var(--minimap-node)"
+            }
+            maskColor="var(--minimap-mask)"
           />
         </ReactFlow>
         {!nodes.length && (

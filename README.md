@@ -34,10 +34,22 @@ bun run dev
 - 流式问答、短标题生成及失败 fallback、取消、错误展示和部分回答保留。
 - 跨 Mesh 关键词搜索（标题/问题/回答）与定位。
 - IndexedDB 原子保存；刷新恢复，意外中断会明确标记，不假装回答已完成。
-- Mock 与 OpenAI-compatible 模型适配器；服务端密钥、本机代理。
+- 软件设置页面：明暗主题、侧栏状态、问答面板宽度、恢复默认布局。
+- Mock 与 OpenAI-compatible 模型适配器；页面配置 API、测试连接、立即切换，本机服务端保存密钥。
 - Document / DocumentChunk / NodeReference 模型及 Repository 查询预留。
 
-## 配置真实模型
+## 软件设置与真实模型
+
+点击右上角「软件设置」：
+
+- **外观与布局**：选择浅色/深色、展开侧栏、调整问答面板宽度，立即生效并保存在当前浏览器；「恢复默认布局」不会更改知识内容或图节点坐标。
+- **大模型 API**：选择 OpenAI-compatible，填写 Base URL、模型名和 API Key。「测试连接」使用当前草稿发送最小文本请求（可能产生少量费用），不会保存配置，也不代表完整流式协议验证。
+- **保存模型配置**后，无需重启或刷新，后续问答立即使用新配置。生成期间请先完成/停止回答再保存。
+- 密钥留空保留已保存值；填写新值替换，明确勾选删除并切换 Mock 才会清除。已保存密钥不会回传浏览器。
+
+模型配置保存在本机服务目录的 `.meshnote/llm-settings.json`，重启保留；密钥是**明文**，文件限制为仅当前用户可读写，并排除 Git，不进入浏览器存储。请保护本机账号与此文件。只有没有该文件时才采用 `.env` 初始配置；已有文件时修改 `.env` 不会覆盖页面保存的配置。
+
+仍可通过 `.env` 提供初始默认配置：
 
 ```bash
 cp .env.example .env
@@ -53,7 +65,7 @@ MESHNOTE_LLM_MODEL=gpt-4o-mini
 
 重启 `bun run dev`。`baseUrl` 是供应商前缀（通常含 `/v1`），不要包含 `/chat/completions`。可以指向支持文本 Chat Completions 和 SSE 的兼容服务。
 
-**不要把密钥命名为 `VITE_*`。** 密钥只留在 Node 环境，不进入浏览器 bundle 或 IndexedDB。没有 key 使用 Mock；真实模型发生错误时不会悄悄切换成演示回答。详见 [LLM 配置与协议](docs/LLM.md)。
+**不要把密钥命名为 `VITE_*`。** 密钥只留在本机服务端，不进入浏览器 bundle 或 IndexedDB；在页面新输入的密钥仅为当前表单临时值并随配置请求提交到本机服务。初始无 key 使用 Mock；真实模型发生错误时不会悄悄切换成演示回答。详见 [LLM 配置与协议](docs/LLM.md)。
 
 真实模型会收到所选探索路径的问答内容。启用前请确认供应商的数据政策；「本地存储」不等于真实模型调用离线。
 
@@ -87,6 +99,8 @@ bunx playwright install chromium
 bun run test:e2e         # Chromium 真实用户流程，自动启动/停止开发服务
 # 构建后验证生产静态服务：
 bun run test:e2e -- --config=playwright.production.config.ts
+# 默认端口被占用时，可隔离验证生产服务（不复用现有服务）：
+MESHNOTE_E2E_PORT=18878 bun run test:e2e -- --config=playwright.production.config.ts
 ```
 
 Linux 缺少浏览器系统依赖时，可按 Playwright 提示安装依赖。端到端测试需要默认端口空闲，并强制使用无 key 模式；真实模型路径用受控协议响应验证，不消耗供应商额度。

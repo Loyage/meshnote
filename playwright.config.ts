@@ -12,10 +12,16 @@ export default defineConfig({
     screenshot: "only-on-failure",
   },
   webServer: {
-    command: "bun run dev",
+    command: "rm -f .meshnote/e2e-dev/llm-settings.json && bun run dev",
     url: "http://127.0.0.1:5173",
     reuseExistingServer: false,
     timeout: 30_000,
-    env: { MESHNOTE_LLM_API_KEY: "" },
+    env: {
+      MESHNOTE_SETTINGS_FILE: ".meshnote/e2e-dev/llm-settings.json",
+      MESHNOTE_LLM_API_KEY: "",
+      MESHNOTE_LLM_BASE_URL: "https://api.openai.com/v1",
+      MESHNOTE_LLM_MODEL: "gpt-4o-mini",
+      MESHNOTE_LLM_TIMEOUT_MS: "120000",
+    },
   },
 });
